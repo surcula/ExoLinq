@@ -162,5 +162,104 @@ foreach (var item in student10)
 Console.WriteLine("**********************************");
 
 
+/*
+Exercice 4.1	Donner le résultat annuel moyen pour l’ensemble des étudiants.
+*/
+var student11 = (int)context.Students.Average(s => s.Year_Result);
+
+Console.WriteLine(student11);
+Console.WriteLine("**********************************");
+
+/*
+Exercice 4.2	Donner le plus haut résultat annuel obtenu par un étudiant.
+*/
+var student12 = (int)context.Students.Max(s => s.Year_Result);
+
+Console.WriteLine(student12);
+Console.WriteLine("**********************************");
+
+/*
+Exercice 4.3	Donner la somme des résultats annuels.
+*/
+var student13 = (int)context.Students.Sum(s => s.Year_Result);
+
+Console.WriteLine(student13);
+Console.WriteLine("**********************************");
+
+/*
+Exercice 4.4	Donner le résultat annuel le plus faible.
+*/
+var student14 = (int)context.Students.Min(s => s.Year_Result);
+
+Console.WriteLine(student14);
+Console.WriteLine("**********************************");
+/*
+Exercice 4.5	Donner le nombre de lignes qui composent la séquence « Students » ayant obtenu un résultat annuel impair.
+ */
+var student15 = context.Students.Where(s => s.Year_Result % 2 != 0 ).Count();
+
+Console.WriteLine(student15);
+Console.WriteLine("**********************************");
 
 
+
+/*
+ Exercice 5.1	Donner pour chaque section, le résultat maximum (« Max_Result ») obtenu par les étudiants.
+*/
+var student16 = context.Students.GroupBy(s => s.Section_ID).Select(s => new { section = s.Key , maxResult = s.Max( g => g.Year_Result)});
+
+
+foreach (var item in student16)
+{
+    Console.WriteLine($"{item.section} : {item.maxResult}");
+}
+Console.WriteLine("**********************************");
+/*
+Exercice 5.2	Donner pour toutes les sections commençant par 10, le résultat annuel moyen (« AVGResult ») obtenu par les étudiants.
+*/
+var student17 = context.Students.Where(s => s.Section_ID.ToString().StartsWith("10")).GroupBy(s => s.Section_ID).Select( s => new
+{
+    section = s.Key,
+    avgResult = s.Average( g => g.Year_Result )
+} );
+
+foreach (var item in student17)
+{
+    Console.WriteLine($"{item.section} {item.avgResult}");
+}
+Console.WriteLine("**********************************");
+/*
+Exercice 5.3	Donner le résultat moyen (« AVGResult ») et le mois en chiffre (« BirthMonth ») pour les étudiants né le même mois entre 1970 et 1985.
+*/
+var student18 = context.Students.Where(s => s.BirthDate.Year > 1970 && s.BirthDate.Year < 1985).GroupBy(s => s.BirthDate.Month).Select(s => new
+{
+    mois = s.Key,
+    avgResult = s.Average(g => g.Year_Result)
+});
+
+foreach (var item in student18)
+{
+    Console.WriteLine($"{item.mois} {item.avgResult}");
+}
+Console.WriteLine("**********************************");
+
+/*
+Exercice 5.4	Donner pour toutes les sections qui compte plus de 3 étudiants, la moyenne des résultats annuels (« AVGResult »).
+*/
+
+var student19 = context.Students.GroupBy(s => s.Section_ID).Where(s => s.Count()  > 3 ).Select(s => new
+{
+    section = s.Key,
+    avgResult = s.Average(g => g.Year_Result)
+});
+
+foreach (var item in student19)
+{
+    Console.WriteLine($"{item.section} {item.avgResult}");
+}
+Console.WriteLine("**********************************");
+
+/*
+Exercice 5.5	Donner pour chaque cours, le nom du professeur responsable ainsi que la section dont le professeur fait partie.
+
+ */
