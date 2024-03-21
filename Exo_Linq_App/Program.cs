@@ -1,5 +1,6 @@
 ﻿using Exo_Linq_Context;
 using System.Reflection.Metadata.Ecma335;
+using System.Threading.Tasks.Dataflow;
 
 Console.WriteLine("Exercice Linq");
 Console.WriteLine("*************");
@@ -43,7 +44,7 @@ Console.WriteLine("**********************************");
  * Exercice 2.3	Ecrire une requête pour présenter, pour chaque étudiant, dans une seule chaine de caractère l’ensemble des données relatives à un étudiant séparées par le symbole |.
  */
 var student3 = context.Students.Select(s => new {
-        fullDonnees = s.Student_ID + "|" + s.Last_Name + "|" + s.First_Name + "|" + s.BirthDate + "|" + s.Login + "|" + s.Year_Result + "|" + s.Section_ID + "|" + s.Course_ID
+        fullDonnees = s.Student_ID + " | " + s.Last_Name + " | " + s.First_Name + " | " + s.BirthDate.ToShortDateString() + " | " + s.Login + " | " + s.Year_Result + " | " + s.Section_ID + " | " + s.Course_ID
 });
 foreach (var item in student3)
 {
@@ -68,7 +69,7 @@ Console.WriteLine("**********************************");
  * Exercice 3.2	Donner pour chaque étudiant entre 1955 et 1965 le nom, le résultat annuel et la catégorie à laquelle il appartient. La catégorie est fonction du résultat annuel obtenu ; un résultat inférieur à 10 appartient à la catégorie « inférieure », un résultat égal à 10 appartient à la catégorie « neutre », un résultat autre appartient à la catégorie « supérieure ».
  */
 
-var student5 = context.Students.Where(s => s.BirthDate.Year > 1955 && s.BirthDate.Year < 1965).Select(s => new {
+var student5 = context.Students.Where(s => s.BirthDate.Year >= 1955 && s.BirthDate.Year <= 1965).Select(s => new {
     nom = s.Last_Name,
     resultatannuel = s.Year_Result,
     categorie = s.Year_Result > 10 ? "supérieur" : s.Year_Result == 10 ? "Neutre" : "Inférieur"
@@ -263,3 +264,125 @@ Console.WriteLine("**********************************");
 Exercice 5.5	Donner pour chaque cours, le nom du professeur responsable ainsi que la section dont le professeur fait partie.
 
  */
+
+var student20 = context.Courses.Join(context.Professors, cou => cou.Professor_ID, pro => pro.Professor_ID, (cou, pro) => new
+{
+    cours = cou.Course_Name,
+    nomProf = pro.Professor_Name,
+    section = pro.Section_ID
+}).Join(context.Sections, cou => cou.section , sec => sec.Section_ID, (cou,sec) => new {
+    cours = cou.cours,
+    nomProf = cou.nomProf,
+    section = sec.Section_Name
+});
+
+foreach (var item in student20)
+{
+    Console.WriteLine($"{item.cours} : {item.nomProf} : {item.section}");
+}
+Console.WriteLine("**********************************");
+/*
+Exercice 5.6	Donner pour chaque section, l’id, le nom et le nom de son délégué. Classer les sections dans l’ordre inverse des id de section.
+ */
+var student21 = context.Sections.Join(context.Students, sec => sec.Delegate_ID, std => std.Student_ID, (sec, std) => new
+{
+    id = sec.Section_ID,
+    nomSection = sec.Section_Name,
+    nomDelegate = std.Last_Name
+});
+
+foreach (var item in student21)
+{
+    Console.WriteLine($"{item.id} : {item.nomSection} : {item.nomDelegate}");
+}
+Console.WriteLine("**********************************");
+/*
+Exercice 5.7	Donner, pour toutes les sections, le nom des professeurs qui en sont membres
+Section_ID - Section_Name :
+-Professor_Name1
+- Professor_Name2
+*/
+var student22 = context.Sections.GroupJoin(context.Professors, sect => sect.Section_ID, pro => pro.Section_ID, (sect, pro) => new
+{
+    sectionName = sect.Section_Name,
+    nomProf = pro
+});
+
+foreach (var item in student22)
+{
+    Console.WriteLine($"{item.sectionName} : ");
+    foreach (var prof in item.nomProf)
+    {
+        Console.WriteLine($"       : {prof.Professor_Name}");
+    }
+    
+}
+Console.WriteLine("**********************************");
+
+/*
+Exercice 5.8	Même objectif que la question 5.7, mais seules les sections comportant au moins un professeur doivent être reprises. 
+*/
+var student23 = context.Sections.GroupJoin(context.Professors, sect => sect.Section_ID, pro => pro.Section_ID, (sect, pro) => new
+{
+    sectionName = sect.Section_Name,
+    nomProf = pro
+}).Where(g => g.nomProf.Count() > 0);
+
+foreach (var item in student23)
+{
+    Console.WriteLine($"{item.sectionName} : ");
+    foreach (var prof in item.nomProf)
+    {
+        Console.WriteLine($"       : {prof.Professor_Name}");
+    }
+
+}
+Console.WriteLine("**********************************");
+
+/*
+Exercice 5.9	Donner à chaque étudiant ayant obtenu un résultat annuel supérieur ou égal à 12 son grade en fonction de son résultat annuel et sur base de la table grade. La liste doit être classée dans l’ordre alphabétique des grades attribués.
+*/
+var student24 = context.Students.Where(s => s.Year_Result >= 12).Join(context.Grades, std => true, grd => true, (std, grd) => new
+{
+    std.Last_Name,
+    std.Year_Result,
+    grd.GradeName,
+    grd.Lower_Bound,
+    grd.Upper_Bound
+}).Where(s => s.Year_Result >= s.Lower_Bound && s.Year_Result <= s.Upper_Bound).OrderBy(s => s.GradeName);
+
+foreach (var item in student24)
+{
+    Console.WriteLine($"{item.Last_Name} {item.Year_Result} {item.GradeName} : ");
+    
+
+}
+Console.WriteLine("**********************************");
+
+/*
+Exercice 5.10	Donner la liste des professeurs et la section à laquelle ils se rapportent ainsi que le(s) cour(s) (nom du cours et crédits) dont le professeur est responsable. La liste est triée par ordre décroissant des crédits attribués à un cours.
+*/
+
+var student25 = context.Professors.Join(context.Sections, pro => pro.Section_ID, sec => sec.Section_ID, (pro, sec) => new
+{
+    pro.Professor_ID,
+    pro.Professor_Name,
+    pro.Section_ID,
+    sec.Section_Name
+}).Join(context.Courses, pro => pro.Professor_ID,cou => cou.Professor_ID,(pro,cou) => new {
+    
+});
+
+foreach (var item in student25)
+{
+    //Console.WriteLine($"{item.Last_Name} {item.Year_Result} {item.GradeName} : ");
+
+
+}
+Console.WriteLine("**********************************");
+
+/*
+Exercice 5.11	Donner pour chaque professeur son id et le total des crédits ECTS (« ECTSTOT ») qui lui sont attribués. La liste proposée est triée par ordre décroissant de la somme des crédits alloués.
+*/
+
+
